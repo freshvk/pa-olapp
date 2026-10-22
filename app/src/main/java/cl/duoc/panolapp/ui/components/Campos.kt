@@ -79,7 +79,7 @@ fun CampoTexto(
         keyboardActions = KeyboardActions(onDone = { alTerminar?.invoke() }),
         singleLine = unaLinea,
         minLines = lineasMinimas,
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(6.dp)
     )
 }
 
@@ -96,7 +96,7 @@ fun BotonCarga(
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp),
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(6.dp)
     ) {
         AnimatedContent(targetState = cargando, label = "boton") { estaCargando ->
             if (estaCargando) {
@@ -117,7 +117,7 @@ fun AvisoError(mensaje: String?, modifier: Modifier = Modifier) {
     AnimatedVisibility(visible = mensaje != null, modifier = modifier) {
         Surface(
             color = MaterialTheme.colorScheme.errorContainer,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(6.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(

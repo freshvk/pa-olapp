@@ -1,6 +1,5 @@
 package cl.duoc.panolapp.ui.components
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +34,7 @@ import cl.duoc.panolapp.ui.theme.EstadoOk
 fun IconoEquipo(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(MaterialTheme.colorScheme.primaryContainer),
         contentAlignment = Alignment.Center
     ) {
@@ -52,7 +51,7 @@ fun EtiquetaEstado(texto: String, color: Color, modifier: Modifier = Modifier) {
     val colorAnimado by animateColorAsState(color, label = "colorEstado")
     Surface(
         color = colorAnimado.copy(alpha = 0.15f),
-        shape = RoundedCornerShape(50),
+        shape = RoundedCornerShape(4.dp),
         modifier = modifier
     ) {
         Text(
@@ -69,7 +68,7 @@ fun TarjetaEquipo(equipo: Equipo, onClick: () -> Unit, modifier: Modifier = Modi
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
@@ -98,35 +97,6 @@ fun TarjetaEquipo(equipo: Equipo, onClick: () -> Unit, modifier: Modifier = Modi
                     color = if (equipo.stockBajo) EstadoAviso else EstadoOk
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun TarjetaResumen(valor: Int, etiqueta: String, modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            AnimatedContent(targetState = valor, label = "contador") { numero ->
-                Text(
-                    "$numero",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-            Text(
-                etiqueta,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
         }
     }
 }
