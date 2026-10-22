@@ -64,7 +64,11 @@ fun PantallaInventario(
         },
         botonFlotante = {
             if (esAdmin) {
-                FloatingActionButton(onClick = onNuevoEquipo) {
+                FloatingActionButton(
+                    onClick = onNuevoEquipo,
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ) {
                     Icon(Icons.Default.Add, contentDescription = "Nuevo equipo")
                 }
             }
@@ -83,7 +87,7 @@ fun PantallaInventario(
                 placeholder = { Text("Buscar equipo") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 singleLine = true,
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(6.dp)
             )
             Row(
                 modifier = Modifier
