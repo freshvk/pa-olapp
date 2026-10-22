@@ -19,8 +19,9 @@ Patrón **MVVM**: *Pantalla (View)* muestra datos y avisa acciones → *ViewMode
 - `lifecycle-runtime-ktx`: coroutines atadas al ciclo de vida de Android.
 - Pruebas: `junit` (pruebas unitarias), `androidx-junit`, `espresso-core`, `ui-test-junit4`, `ui-test-manifest` (pruebas en dispositivo; vienen en la plantilla, no las usamos).
 
-**Las 2 que agregamos**
+**Las 3 que agregamos**
 - `lifecycle-viewmodel-compose`: función `viewModel()` para obtener un ViewModel desde un Composable. Es la pieza que hace posible MVVM en Compose.
+- `material-icons-core`: íconos básicos de Material (Person, Lock, Build, etc.). Material 3 ya no los trae incluidos, y la versión la fija el BOM.
 - `navigation-compose`: `NavHost`, `composable(ruta)`, `navigate()` y argumentos entre pantallas.
 
 **Lo que NO usamos a propósito** (para no salirnos de las dependencias de la profesora): Room (usamos SQLite nativo), Coil, librerías de permisos o de cámara (la app no usa fotos ni cámara).
@@ -60,11 +61,11 @@ Patrón **MVVM**: *Pantalla (View)* muestra datos y avisa acciones → *ViewMode
 - `Compartir.kt`: `Intent.ACTION_SEND` con selector de apps.
 
 ### `ui/theme/`
-- `Color.kt` (paleta verde/azul y colores de estado), `Type.kt` (tipografías), `Theme.kt` (`PanolAppTheme`, tema Material 3 claro/oscuro).
+- `Color.kt` (paleta marino + ámbar + arena y colores de estado), `Type.kt` (títulos con tipografía serif y textos sans-serif), `Theme.kt` (`PanolAppTheme`: esquemas claro/oscuro y formas de esquinas pequeñas).
 
 ### `ui/components/` – piezas reutilizables
 - `Campos.kt`: `CampoTexto` (campo con ícono, error, teclado y ojo de contraseña), `BotonCarga` (botón con indicador de carga), `AvisoError`.
-- `Tarjetas.kt`: `IconoEquipo`, `EtiquetaEstado`, `TarjetaEquipo`, `TarjetaResumen`.
+- `Tarjetas.kt`: `IconoEquipo`, `EtiquetaEstado`, `TarjetaEquipo`.
 - `Estructura.kt`: `PantallaConBarra` = Scaffold con barra superior, botón volver, acciones y botón flotante.
 
 ### `ui/navigation/`
@@ -72,7 +73,7 @@ Patrón **MVVM**: *Pantalla (View)* muestra datos y avisa acciones → *ViewMode
 - `AppNavegacion.kt`: crea el `NavController`, los 3 ViewModels (compartidos), elige pantalla inicial según haya sesión, define cada `composable`, las animaciones de transición, y al cerrar sesión limpia el historial (`popUpTo(0)`).
 
 ### `ui/screen/` – 9 pantallas
-`Login`, `Registro`, `Menu` (contadores, alertas, accesos), `Inventario` (búsqueda, chips, lista animada, compartir, FAB), `FormularioEquipo` (nombre, categoría, cantidades, vibración al guardar), `DetalleEquipo` (datos, préstamo, editar, eliminar con diálogo), `Prestamos` (filtros, devolución con confirmación), `Usuarios` (solo admin: lista y cambio de rol), `Perfil` (editar, ver rol y cerrar sesión).
+`Login`, `Registro`, `Menu` (cabecera con saludo, rol e indicadores animados; batería; alertas; lista de accesos), `Inventario` (búsqueda, chips, lista animada, compartir, FAB), `FormularioEquipo` (nombre, categoría, cantidades, vibración al guardar), `DetalleEquipo` (datos, préstamo, editar, eliminar con diálogo), `Prestamos` (filtros, devolución con confirmación), `Usuarios` (solo admin: lista y cambio de rol), `Perfil` (editar, ver rol y cerrar sesión).
 Patrón de todas: `collectAsState()` observa el estado; los eventos llaman a funciones del ViewModel; `LaunchedEffect` reacciona a "éxito" para navegar.
 
 ### `res/` y manifiesto

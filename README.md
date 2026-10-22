@@ -5,8 +5,8 @@ DSY1105 Desarrollo de Aplicaciones Móviles · Duoc UC · Evaluación Parcial 2
 
 ## Tecnología
 Kotlin + Jetpack Compose + Material 3. Mismas versiones/dependencias del proyecto de la profesora
-(`gradle/libs.versions.toml`, AGP 9.3.3, Kotlin 2.2.10, Compose BOM 2026.02.01), más solo dos librerías oficiales:
-`lifecycle-viewmodel-compose` (MVVM) y `navigation-compose` (navegación).
+(`gradle/libs.versions.toml`, AGP 9.3.3, Kotlin 2.2.10, Compose BOM 2026.02.01), más solo tres librerías oficiales:
+`lifecycle-viewmodel-compose` (MVVM), `navigation-compose` (navegación) y `material-icons-core` (íconos, versión fijada por el BOM).
 
 ## Roles
 | | Administrador | Usuario |
