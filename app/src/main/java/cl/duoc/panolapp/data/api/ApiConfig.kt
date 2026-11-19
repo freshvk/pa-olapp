@@ -1,7 +1,7 @@
 package cl.duoc.panolapp.data.api
 
 object ApiConfig {
-    const val HOST = "http://localhost"
+    const val HOST = "http://52.203.69.245"
     const val API_KEY = "panol-equipo17-2026"
 
     const val PUERTO_USUARIOS = 8081
