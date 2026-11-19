@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,10 +22,12 @@ import cl.duoc.panolapp.ui.screen.PantallaMenu
 import cl.duoc.panolapp.ui.screen.PantallaPerfil
 import cl.duoc.panolapp.ui.screen.PantallaPrestamos
 import cl.duoc.panolapp.ui.screen.PantallaRegistro
+import cl.duoc.panolapp.ui.screen.PantallaReportes
 import cl.duoc.panolapp.ui.screen.PantallaUsuarios
 import cl.duoc.panolapp.viewmodel.AuthViewModel
 import cl.duoc.panolapp.viewmodel.EquipoViewModel
 import cl.duoc.panolapp.viewmodel.PrestamoViewModel
+import cl.duoc.panolapp.viewmodel.ReporteViewModel
 
 @Composable
 fun AppNavegacion() {
@@ -32,6 +35,7 @@ fun AppNavegacion() {
     val authVm: AuthViewModel = viewModel()
     val equipoVm: EquipoViewModel = viewModel()
     val prestamoVm: PrestamoViewModel = viewModel()
+    val reporteVm: ReporteViewModel = viewModel()
 
     val usuario by authVm.usuario.collectAsState()
     val esAdmin = usuario?.esAdmin == true
@@ -71,6 +75,7 @@ fun AppNavegacion() {
                 onNuevoEquipo = { nav.navigate(Rutas.EQUIPO_NUEVO) },
                 onPrestamos = { nav.navigate(Rutas.PRESTAMOS) },
                 onUsuarios = { nav.navigate(Rutas.USUARIOS) },
+                onReportes = { nav.navigate(Rutas.REPORTES) },
                 onPerfil = { nav.navigate(Rutas.PERFIL) }
             )
         }
@@ -84,17 +89,21 @@ fun AppNavegacion() {
             )
         }
         composable(Rutas.EQUIPO_NUEVO) {
-            PantallaFormularioEquipo(vm = equipoVm, idEquipo = null, onVolver = { nav.popBackStack() })
+            SoloAdmin(usuario != null, esAdmin, onDenegado = { nav.popBackStack() }) {
+                PantallaFormularioEquipo(vm = equipoVm, idEquipo = null, onVolver = { nav.popBackStack() })
+            }
         }
         composable(
             route = Rutas.EQUIPO_EDITAR,
             arguments = listOf(navArgument(Rutas.ARG_ID) { type = NavType.LongType })
         ) { entrada ->
-            PantallaFormularioEquipo(
-                vm = equipoVm,
-                idEquipo = entrada.arguments?.getLong(Rutas.ARG_ID),
-                onVolver = { nav.popBackStack() }
-            )
+            SoloAdmin(usuario != null, esAdmin, onDenegado = { nav.popBackStack() }) {
+                PantallaFormularioEquipo(
+                    vm = equipoVm,
+                    idEquipo = entrada.arguments?.getLong(Rutas.ARG_ID),
+                    onVolver = { nav.popBackStack() }
+                )
+            }
         }
         composable(
             route = Rutas.EQUIPO_DETALLE,
@@ -115,7 +124,12 @@ fun AppNavegacion() {
             PantallaPrestamos(vm = prestamoVm, esAdmin = esAdmin, onVolver = { nav.popBackStack() })
         }
         composable(Rutas.USUARIOS) {
-            PantallaUsuarios(vm = authVm, onVolver = { nav.popBackStack() })
+            SoloAdmin(usuario != null, esAdmin, onDenegado = { nav.popBackStack() }) {
+                PantallaUsuarios(vm = authVm, onVolver = { nav.popBackStack() })
+            }
+        }
+        composable(Rutas.REPORTES) {
+            PantallaReportes(vm = reporteVm, esAdmin = esAdmin, onVolver = { nav.popBackStack() })
         }
         composable(Rutas.PERFIL) {
             PantallaPerfil(
@@ -127,4 +141,11 @@ fun AppNavegacion() {
             )
         }
     }
+}
+
+@Composable
+private fun SoloAdmin(sesionCargada: Boolean, esAdmin: Boolean, onDenegado: () -> Unit, contenido: @Composable () -> Unit) {
+    val denegado = sesionCargada && !esAdmin
+    LaunchedEffect(denegado) { if (denegado) onDenegado() }
+    if (!denegado) contenido()
 }

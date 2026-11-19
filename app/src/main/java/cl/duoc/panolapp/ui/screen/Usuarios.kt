@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import cl.duoc.panolapp.data.model.ResultadoOperacion
+import cl.duoc.panolapp.ui.components.AvisoReintento
 import cl.duoc.panolapp.data.model.Usuario
 import cl.duoc.panolapp.ui.components.EtiquetaEstado
 import cl.duoc.panolapp.ui.components.PantallaConBarra
@@ -34,31 +36,40 @@ import cl.duoc.panolapp.viewmodel.AuthViewModel
 fun PantallaUsuarios(vm: AuthViewModel, onVolver: () -> Unit) {
     val usuarios by vm.usuarios.collectAsState()
     val actual by vm.usuario.collectAsState()
+    val error by vm.errorUsuarios.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) { vm.cargarUsuarios() }
 
     PantallaConBarra(titulo = "Usuarios", onVolver = onVolver) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+        AvisoReintento(error, vm::cargarUsuarios)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(usuarios, key = { it.id }) { usuario ->
                 TarjetaUsuario(
                     usuario = usuario,
-                    esActual = usuario.id == actual?.id,
+                    esActual = usuario.correo == actual?.correo,
                     onCambiarRol = {
-                        vm.cambiarRol(usuario) { ok ->
-                            val mensaje = if (ok) "Rol actualizado" else "No puedes cambiar tu propio rol"
+                        vm.cambiarRol(usuario) { resultado ->
+                            val mensaje = when (resultado) {
+                                ResultadoOperacion.Ok -> "Rol actualizado"
+                                is ResultadoOperacion.Error -> resultado.mensaje
+                            }
                             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
                         }
                     }
                 )
             }
+        }
         }
     }
 }

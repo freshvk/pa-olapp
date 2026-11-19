@@ -11,6 +11,7 @@ object Rutas {
     const val PRESTAMOS = "prestamos"
     const val PERFIL = "perfil"
     const val USUARIOS = "usuarios"
+    const val REPORTES = "reportes"
 
     const val ARG_ID = "id"
 

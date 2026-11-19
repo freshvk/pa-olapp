@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cl.duoc.panolapp.PanolApp
 import cl.duoc.panolapp.data.model.ResultadoAuth
+import cl.duoc.panolapp.data.model.ResultadoOperacion
 import cl.duoc.panolapp.data.model.Roles
 import cl.duoc.panolapp.data.model.Usuario
 import cl.duoc.panolapp.domain.Validaciones
@@ -69,16 +70,23 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     fun haySesion(): Boolean = repositorio.haySesion()
 
+    private val _errorUsuarios = MutableStateFlow<String?>(null)
+    val errorUsuarios: StateFlow<String?> = _errorUsuarios.asStateFlow()
+
     fun cargarUsuarios() {
-        viewModelScope.launch { _usuarios.value = repositorio.listar() }
+        viewModelScope.launch {
+            val carga = repositorio.listar()
+            carga.datos?.let { _usuarios.value = it }
+            _errorUsuarios.value = carga.error
+        }
     }
 
-    fun cambiarRol(objetivo: Usuario, alTerminar: (Boolean) -> Unit) {
+    fun cambiarRol(objetivo: Usuario, alTerminar: (ResultadoOperacion) -> Unit) {
         val nuevoRol = if (objetivo.esAdmin) Roles.USUARIO else Roles.ADMIN
         viewModelScope.launch {
-            val ok = repositorio.cambiarRol(objetivo.id, nuevoRol)
-            if (ok) _usuarios.value = repositorio.listar()
-            alTerminar(ok)
+            val resultado = repositorio.cambiarRol(objetivo.id, nuevoRol)
+            if (resultado == ResultadoOperacion.Ok) cargarUsuarios()
+            alTerminar(resultado)
         }
     }
 

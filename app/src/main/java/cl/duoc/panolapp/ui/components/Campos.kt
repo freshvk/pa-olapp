@@ -63,6 +63,8 @@ fun CampoTexto(
                 TextButton(onClick = { claveVisible = !claveVisible }) {
                     Text(if (claveVisible) "Ocultar" else "Ver")
                 }
+            } else if (error != null) {
+                Icon(Icons.Default.Warning, contentDescription = "Error", tint = MaterialTheme.colorScheme.error)
             }
         },
         isError = error != null,
@@ -107,6 +109,31 @@ fun BotonCarga(
                 )
             } else {
                 Text(texto)
+            }
+        }
+    }
+}
+
+@Composable
+fun AvisoReintento(mensaje: String?, onReintentar: () -> Unit, modifier: Modifier = Modifier) {
+    AnimatedVisibility(visible = mensaje != null, modifier = modifier) {
+        Surface(
+            color = MaterialTheme.colorScheme.errorContainer,
+            shape = RoundedCornerShape(6.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(start = 12.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                Text(
+                    mensaje ?: "",
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = onReintentar) { Text("Reintentar") }
             }
         }
     }

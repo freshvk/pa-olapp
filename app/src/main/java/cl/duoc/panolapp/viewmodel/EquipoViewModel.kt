@@ -4,7 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cl.duoc.panolapp.PanolApp
+import cl.duoc.panolapp.data.api.cargarSeguro
+import cl.duoc.panolapp.data.api.Carga
 import cl.duoc.panolapp.data.model.Equipo
+import cl.duoc.panolapp.data.model.ResultadoOperacion
 import cl.duoc.panolapp.domain.Validaciones
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +25,8 @@ data class InventarioUiState(
     val equipos: List<Equipo> = emptyList(),
     val consulta: String = "",
     val categoria: String? = null,
-    val cargando: Boolean = true
+    val cargando: Boolean = true,
+    val error: String? = null
 ) {
     val visibles: List<Equipo>
         get() = equipos.filter { e ->
@@ -45,6 +49,7 @@ data class FormularioEquipoUiState(
     val errorCategoria: String? = null,
     val errorCantidad: String? = null,
     val errorStockMinimo: String? = null,
+    val errorGeneral: String? = null,
     val guardando: Boolean = false,
     val guardado: Boolean = false
 ) {
@@ -59,11 +64,19 @@ class EquipoViewModel(application: Application) : AndroidViewModel(application) 
     private val consulta = MutableStateFlow("")
     private val categoriaFiltro = MutableStateFlow<String?>(null)
 
-    private val todos: Flow<List<Equipo>> = contenedor.cambios.map { repositorio.listar() }
+    private val todos: Flow<Carga<List<Equipo>>> = contenedor.cambios.map { cargarSeguro { repositorio.listar() } }
 
-    val inventario: StateFlow<InventarioUiState> = combine(todos, consulta, categoriaFiltro) { lista, q, c ->
-        InventarioUiState(equipos = lista, consulta = q, categoria = c, cargando = false)
+    val inventario: StateFlow<InventarioUiState> = combine(todos, consulta, categoriaFiltro) { carga, q, c ->
+        InventarioUiState(
+            equipos = carga.datos.orEmpty(),
+            consulta = q,
+            categoria = c,
+            cargando = false,
+            error = carga.error
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InventarioUiState())
+
+    fun recargar() { contenedor.cambios.update { it + 1 } }
 
     fun onConsulta(valor: String) { consulta.value = valor }
 
@@ -73,17 +86,24 @@ class EquipoViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _detalle = MutableStateFlow<Equipo?>(null)
     val detalle: StateFlow<Equipo?> = _detalle.asStateFlow()
+    private val _errorDetalle = MutableStateFlow<String?>(null)
+    val errorDetalle: StateFlow<String?> = _errorDetalle.asStateFlow()
     private var trabajoDetalle: Job? = null
 
     fun cargarDetalle(id: Long) {
         trabajoDetalle?.cancel()
         _detalle.value = null
+        _errorDetalle.value = null
         trabajoDetalle = viewModelScope.launch {
-            contenedor.cambios.collect { _detalle.value = repositorio.obtener(id) }
+            contenedor.cambios.collect {
+                val carga = cargarSeguro { repositorio.obtener(id) }
+                _detalle.value = carga.datos
+                _errorDetalle.value = carga.error
+            }
         }
     }
 
-    fun eliminar(equipo: Equipo, alTerminar: (Boolean) -> Unit) {
+    fun eliminar(equipo: Equipo, alTerminar: (ResultadoOperacion) -> Unit) {
         viewModelScope.launch { alTerminar(repositorio.eliminar(equipo.id)) }
     }
 
@@ -101,7 +121,12 @@ class EquipoViewModel(application: Application) : AndroidViewModel(application) 
             return
         }
         viewModelScope.launch {
-            val equipo = repositorio.obtener(id) ?: return@launch
+            val carga = cargarSeguro { repositorio.obtener(id) }
+            if (carga.error != null) {
+                _formulario.update { it.copy(errorGeneral = carga.error) }
+                return@launch
+            }
+            val equipo = carga.datos ?: return@launch
             _formulario.value = FormularioEquipoUiState(
                 id = equipo.id,
                 nombre = equipo.nombre,
@@ -149,16 +174,21 @@ class EquipoViewModel(application: Application) : AndroidViewModel(application) 
             }
             return
         }
-        _formulario.update { it.copy(guardando = true) }
+        _formulario.update { it.copy(guardando = true, errorGeneral = null) }
         viewModelScope.launch {
-            repositorio.guardar(
+            val resultado = repositorio.guardar(
                 id = actual.id,
                 nombre = actual.nombre,
                 categoria = actual.categoria!!,
                 cantidadTotal = actual.cantidad.trim().toInt(),
                 stockMinimo = actual.stockMinimo.trim().toInt()
             )
-            _formulario.update { it.copy(guardando = false, guardado = true) }
+            when (resultado) {
+                ResultadoOperacion.Ok -> _formulario.update { it.copy(guardando = false, guardado = true) }
+                is ResultadoOperacion.Error -> _formulario.update {
+                    it.copy(guardando = false, errorGeneral = resultado.mensaje)
+                }
+            }
         }
     }
 

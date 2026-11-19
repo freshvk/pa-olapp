@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import cl.duoc.panolapp.recursos.EstadoBateria
 import cl.duoc.panolapp.recursos.rememberBateria
+import cl.duoc.panolapp.ui.components.AvisoReintento
 import cl.duoc.panolapp.viewmodel.AuthViewModel
 import cl.duoc.panolapp.viewmodel.EquipoViewModel
 import cl.duoc.panolapp.viewmodel.PrestamoViewModel
@@ -54,6 +56,7 @@ fun PantallaMenu(
     onNuevoEquipo: () -> Unit,
     onPrestamos: () -> Unit,
     onUsuarios: () -> Unit,
+    onReportes: () -> Unit,
     onPerfil: () -> Unit
 ) {
     val usuario by authVm.usuario.collectAsState()
@@ -116,7 +119,9 @@ fun PantallaMenu(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                bateria?.let { TarjetaBateria(it) }
+                inventario.error?.let { AvisoReintento(it, equipoVm::recargar) }
+
+                if (esAdmin) bateria?.let { TarjetaBateria(it) }
 
                 if (prestamos.vencidos > 0) {
                     AvisoMenu("Hay ${prestamos.vencidos} préstamo(s) vencido(s).", onPrestamos)
@@ -129,10 +134,12 @@ fun PantallaMenu(
                     FilaMenu("Inventario", "Consulta y filtra el stock", Icons.Default.Build, onInventario)
                     FilaMenu("Nuevo equipo", "Registra una herramienta o equipo", Icons.Default.AddCircle, onNuevoEquipo)
                     FilaMenu("Préstamos", "Salidas, vencimientos y devoluciones", Icons.Default.DateRange, onPrestamos)
+                    FilaMenu("Reportes", "Resumen del pañol y equipos más pedidos", Icons.Default.Info, onReportes)
                     FilaMenu("Usuarios", "Administra roles y accesos", Icons.Default.Person, onUsuarios)
                 } else {
                     FilaMenu("Catálogo", "Revisa qué equipos hay disponibles", Icons.Default.Build, onInventario)
                     FilaMenu("Mis préstamos", "Tus solicitudes y vencimientos", Icons.Default.DateRange, onPrestamos)
+                    FilaMenu("Mi resumen", "Tu actividad en el pañol", Icons.Default.Info, onReportes)
                 }
                 FilaMenu("Mi perfil", "Tus datos y cierre de sesión", Icons.Default.Person, onPerfil)
             }

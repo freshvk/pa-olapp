@@ -37,7 +37,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cl.duoc.panolapp.recursos.vibrar
+import cl.duoc.panolapp.data.model.ResultadoOperacion
 import cl.duoc.panolapp.ui.components.AvisoError
+import cl.duoc.panolapp.ui.components.AvisoReintento
 import cl.duoc.panolapp.ui.components.BotonCarga
 import cl.duoc.panolapp.ui.components.CampoTexto
 import cl.duoc.panolapp.ui.components.IconoEquipo
@@ -59,6 +61,7 @@ fun PantallaDetalleEquipo(
     onEditar: () -> Unit
 ) {
     val equipo by equipoVm.detalle.collectAsState()
+    val errorDetalle by equipoVm.errorDetalle.collectAsState()
     val form by prestamoVm.formulario.collectAsState()
     val context = LocalContext.current
     var confirmarEliminar by remember { mutableStateOf(false) }
@@ -90,7 +93,13 @@ fun PantallaDetalleEquipo(
     ) { padding ->
         val e = equipo
         if (e == null) {
-            Text("Cargando...", modifier = Modifier.padding(padding).padding(24.dp))
+            Column(Modifier.padding(padding).padding(24.dp)) {
+                if (errorDetalle != null) {
+                    AvisoReintento(errorDetalle, { equipoVm.cargarDetalle(idEquipo) })
+                } else {
+                    Text("Cargando...")
+                }
+            }
             return@PantallaConBarra
         }
         Column(
@@ -173,13 +182,12 @@ fun PantallaDetalleEquipo(
                 confirmButton = {
                     TextButton(onClick = {
                         confirmarEliminar = false
-                        equipoVm.eliminar(e) { ok ->
-                            if (ok) onVolver()
-                            else Toast.makeText(
-                                context,
-                                "No se puede eliminar: tiene préstamos activos",
-                                Toast.LENGTH_LONG
-                            ).show()
+                        equipoVm.eliminar(e) { resultado ->
+                            when (resultado) {
+                                ResultadoOperacion.Ok -> onVolver()
+                                is ResultadoOperacion.Error ->
+                                    Toast.makeText(context, resultado.mensaje, Toast.LENGTH_LONG).show()
+                            }
                         }
                     }) { Text("Eliminar") }
                 },
