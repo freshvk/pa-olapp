@@ -47,6 +47,28 @@ data class Prestamo(
     fun vencido(ahora: Long = System.currentTimeMillis()): Boolean = activo && ahora > fechaLimite
 }
 
+data class ResumenGeneral(
+    val totalEquipos: Int,
+    val totalUnidades: Int,
+    val disponibles: Int,
+    val prestadas: Int,
+    val prestamosActivos: Int,
+    val prestamosVencidos: Int,
+    val equiposStockBajo: Int
+)
+
+data class TopEquipo(
+    val equipoNombre: String,
+    val prestamos: Int,
+    val unidades: Int
+)
+
+data class MiResumen(
+    val activos: Int,
+    val vencidos: Int,
+    val devueltos: Int
+)
+
 object Categorias {
     val todas = listOf(
         "Herramientas eléctricas",

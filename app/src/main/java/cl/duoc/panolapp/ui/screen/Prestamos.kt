@@ -30,6 +30,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import cl.duoc.panolapp.data.model.Prestamo
+import cl.duoc.panolapp.ui.components.AvisoReintento
+import cl.duoc.panolapp.recursos.compartirTexto
+import cl.duoc.panolapp.data.model.ResultadoOperacion
 import cl.duoc.panolapp.domain.Formatos
 import cl.duoc.panolapp.recursos.vibrar
 import cl.duoc.panolapp.ui.components.EtiquetaEstado
@@ -63,6 +66,7 @@ fun PantallaPrestamos(vm: PrestamoViewModel, esAdmin: Boolean, onVolver: () -> U
                 }
             }
 
+            AvisoReintento(estado.error, vm::recargar)
             val visibles = estado.visibles
             if (visibles.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -82,6 +86,9 @@ fun PantallaPrestamos(vm: PrestamoViewModel, esAdmin: Boolean, onVolver: () -> U
                             prestamo = prestamo,
                             puedeDevolver = esAdmin,
                             onDevolver = { porDevolver = prestamo },
+                            onCompartir = {
+                                compartirTexto(context, "Comprobante de préstamo", textoComprobante(prestamo))
+                            },
                             modifier = Modifier.animateItem()
                         )
                     }
@@ -97,10 +104,14 @@ fun PantallaPrestamos(vm: PrestamoViewModel, esAdmin: Boolean, onVolver: () -> U
                 confirmButton = {
                     TextButton(onClick = {
                         porDevolver = null
-                        vm.devolver(prestamo) { ok ->
-                            if (ok) {
-                                vibrar(context)
-                                Toast.makeText(context, "Devolución registrada", Toast.LENGTH_SHORT).show()
+                        vm.devolver(prestamo) { resultado ->
+                            when (resultado) {
+                                ResultadoOperacion.Ok -> {
+                                    vibrar(context)
+                                    Toast.makeText(context, "Devolución registrada", Toast.LENGTH_SHORT).show()
+                                }
+                                is ResultadoOperacion.Error ->
+                                    Toast.makeText(context, resultado.mensaje, Toast.LENGTH_LONG).show()
                             }
                         }
                     }) { Text("Confirmar") }
@@ -112,7 +123,13 @@ fun PantallaPrestamos(vm: PrestamoViewModel, esAdmin: Boolean, onVolver: () -> U
 }
 
 @Composable
-private fun TarjetaPrestamo(prestamo: Prestamo, puedeDevolver: Boolean, onDevolver: () -> Unit, modifier: Modifier = Modifier) {
+private fun TarjetaPrestamo(
+    prestamo: Prestamo,
+    puedeDevolver: Boolean,
+    onDevolver: () -> Unit,
+    onCompartir: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -144,6 +161,10 @@ private fun TarjetaPrestamo(prestamo: Prestamo, puedeDevolver: Boolean, onDevolv
                     TextButton(onClick = onDevolver, modifier = Modifier.align(Alignment.End)) {
                         Text("Registrar devolución")
                     }
+                } else {
+                    TextButton(onClick = onCompartir, modifier = Modifier.align(Alignment.End)) {
+                        Text("Compartir comprobante")
+                    }
                 }
             } else {
                 prestamo.fechaDevolucion?.let {
@@ -153,3 +174,11 @@ private fun TarjetaPrestamo(prestamo: Prestamo, puedeDevolver: Boolean, onDevolv
         }
     }
 }
+
+private fun textoComprobante(prestamo: Prestamo): String =
+    "Comprobante de préstamo\n" +
+        "Equipo: ${prestamo.equipoNombre}\n" +
+        "Cantidad: ${prestamo.cantidad}\n" +
+        "Solicitante: ${prestamo.solicitante}\n" +
+        "Prestado: ${Formatos.fecha(prestamo.fechaPrestamo)}\n" +
+        "Vence: ${Formatos.fecha(prestamo.fechaLimite)}"

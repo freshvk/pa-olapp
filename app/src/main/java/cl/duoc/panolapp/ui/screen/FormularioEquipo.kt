@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import cl.duoc.panolapp.data.model.Categorias
 import cl.duoc.panolapp.recursos.vibrar
+import cl.duoc.panolapp.ui.components.AvisoError
 import cl.duoc.panolapp.ui.components.BotonCarga
 import cl.duoc.panolapp.ui.components.CampoTexto
 import cl.duoc.panolapp.ui.components.PantallaConBarra
@@ -118,6 +119,7 @@ fun PantallaFormularioEquipo(
             )
 
             Spacer(Modifier.height(16.dp))
+            AvisoError(estado.errorGeneral)
             BotonCarga("Guardar equipo", estado.guardando, vm::guardar)
             Spacer(Modifier.height(24.dp))
         }

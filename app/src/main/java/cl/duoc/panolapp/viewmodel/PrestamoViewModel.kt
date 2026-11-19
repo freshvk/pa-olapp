@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cl.duoc.panolapp.PanolApp
+import cl.duoc.panolapp.data.api.cargarSeguro
 import cl.duoc.panolapp.data.model.Equipo
 import cl.duoc.panolapp.data.model.Prestamo
 import cl.duoc.panolapp.data.model.ResultadoOperacion
@@ -26,7 +27,8 @@ enum class FiltroPrestamo(val etiqueta: String) {
 
 data class PrestamosUiState(
     val prestamos: List<Prestamo> = emptyList(),
-    val filtro: FiltroPrestamo = FiltroPrestamo.ACTIVOS
+    val filtro: FiltroPrestamo = FiltroPrestamo.ACTIVOS,
+    val error: String? = null
 ) {
     val visibles: List<Prestamo>
         get() = when (filtro) {
@@ -57,15 +59,17 @@ class PrestamoViewModel(application: Application) : AndroidViewModel(application
     private val repositorio = contenedor.prestamos
 
     private val filtro = MutableStateFlow(FiltroPrestamo.ACTIVOS)
-    private val todos = contenedor.cambios.map { repositorio.listar() }
+    private val todos = contenedor.cambios.map { cargarSeguro { repositorio.listar() } }
 
-    val estado: StateFlow<PrestamosUiState> = combine(todos, filtro) { lista, f ->
-        PrestamosUiState(prestamos = lista, filtro = f)
+    val estado: StateFlow<PrestamosUiState> = combine(todos, filtro) { carga, f ->
+        PrestamosUiState(prestamos = carga.datos.orEmpty(), filtro = f, error = carga.error)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PrestamosUiState())
 
     fun onFiltro(valor: FiltroPrestamo) { filtro.value = valor }
 
-    fun devolver(prestamo: Prestamo, alTerminar: (Boolean) -> Unit) {
+    fun recargar() { contenedor.cambios.update { it + 1 } }
+
+    fun devolver(prestamo: Prestamo, alTerminar: (ResultadoOperacion) -> Unit) {
         viewModelScope.launch { alTerminar(repositorio.devolver(prestamo.id)) }
     }
 

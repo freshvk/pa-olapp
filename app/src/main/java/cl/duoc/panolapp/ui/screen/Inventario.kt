@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import cl.duoc.panolapp.data.model.Categorias
 import cl.duoc.panolapp.data.model.Equipo
 import cl.duoc.panolapp.recursos.compartirTexto
+import cl.duoc.panolapp.ui.components.AvisoReintento
 import cl.duoc.panolapp.ui.components.PantallaConBarra
 import cl.duoc.panolapp.ui.components.TarjetaEquipo
 import cl.duoc.panolapp.viewmodel.EquipoViewModel
@@ -104,11 +105,14 @@ fun PantallaInventario(
                 }
             }
 
+            AvisoReintento(estado.error, vm::recargar)
+            Spacer(Modifier.height(8.dp))
             val visibles = estado.visibles
             if (visibles.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        if (estado.equipos.isEmpty()) "Aún no hay equipos registrados."
+                        if (estado.error != null) "No se pudo cargar el inventario."
+                        else if (estado.equipos.isEmpty()) "Aún no hay equipos registrados."
                         else "Ningún equipo coincide con tu búsqueda.",
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
