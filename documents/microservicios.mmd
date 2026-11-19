@@ -1,0 +1,16 @@
+flowchart LR
+  A[App Android<br/>Kotlin + Compose + Retrofit] -->|HTTP :8081| U[usuarios-service]
+  A -->|HTTP :8082| E[equipos-service]
+  A -->|HTTP :8083| P[prestamos-service]
+  A -->|HTTP :8084| R[reportes-service]
+  subgraph EC2[AWS EC2 + Elastic IP - Docker Compose]
+    U
+    E
+    P
+    R
+  end
+  U --> F[(Firebase Firestore)]
+  E --> F
+  P --> F
+  R --> F
+  A --> S[(SQLite local<br/>login y sesión)]

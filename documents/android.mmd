@@ -1,0 +1,10 @@
+flowchart TB
+  subgraph UI[ui - Jetpack Compose]
+    N[AppNavegacion] --> S[Pantallas por rol<br/>Login Menu Inventario Prestamos Reportes Usuarios]
+  end
+  S --> VM[ViewModels<br/>Auth Equipo Prestamo Reporte<br/>StateFlow]
+  VM --> RP[Repositories]
+  RP --> L[(SQLite<br/>PanolDatabase)]
+  RP --> AP[Retrofit<br/>ClienteApi + interfaces]
+  AP --> MS[Microservicios Spring Boot]
+  S --> NR[Recursos nativos<br/>Compartir Vibración Batería]
