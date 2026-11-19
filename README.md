@@ -1,67 +1,86 @@
-# PañolApp – Control de equipos y préstamos del pañol
-DSY1105 Desarrollo de Aplicaciones Móviles · Duoc UC · Evaluación Parcial 2
+# PañolApp
 
-**Integrante:** Alejandro Lazón
+Aplicación móvil Android para gestionar el inventario y los préstamos de equipos de un pañol (herramientas, instrumentos de medición, equipos de seguridad y computación). Conecta con microservicios Spring Boot propios, desplegados en AWS.
 
-## Tecnología
-Kotlin + Jetpack Compose + Material 3. Mismas versiones/dependencias del proyecto de la profesora
-(`gradle/libs.versions.toml`, AGP 9.3.3, Kotlin 2.2.10, Compose BOM 2026.02.01), más solo tres librerías oficiales:
-`lifecycle-viewmodel-compose` (MVVM), `navigation-compose` (navegación) y `material-icons-core` (íconos, versión fijada por el BOM).
+> Experiencia 3 – DSY1105 Desarrollo de Aplicaciones Móviles – Duoc UC – Equipo 17
 
-## Roles
-| | Administrador | Usuario |
-|---|---|---|
-| Panel | Contadores, alertas de stock bajo y vencidos | Contadores y sus préstamos |
-| Equipos | Ver, crear, editar, eliminar | Solo ver (catálogo) |
-| Préstamos | Registra a nombre de cualquier persona, ve todos, recibe devoluciones | Solicita a su nombre y ve solo los suyos |
-| Usuarios | Lista y promueve/degrada roles | – |
+## Integrantes
 
-Cuenta de administrador de prueba: **admin@panol.cl / Admin123**. Quien se registra queda como *Usuario*.
-
-## Pantallas (9)
-Login · Registro · Panel (admin/usuario) · Inventario/Catálogo · Nuevo/Editar equipo · Detalle + préstamo · Préstamos · Usuarios (admin) · Perfil
-
-## Requisitos de la pauta
-| Requisito | Dónde |
+| Nombre | Aporte |
 |---|---|
-| Formularios validados | `domain/Validaciones.kt` + `viewmodel/*` (errores por campo en tiempo real) |
-| MVVM + estado | `viewmodel/` (AndroidViewModel + StateFlow, estados `*UiState`) |
-| Navegación | `ui/navigation/AppNavegacion.kt` (NavHost, transiciones, sesión persistente) |
-| Persistencia local | `data/local/PanolDatabase.kt` (SQLite) + `SessionManager` (SharedPreferences) |
-| Recurso nativo 1 | Vibración al guardar/prestar/devolver – `recursos/Vibracion.kt` |
-| Recurso nativo 2 | Estado de la batería en tiempo real (BroadcastReceiver) en el panel – `recursos/Bateria.kt` |
-| Recurso nativo extra | Compartir inventario (Intent) – `recursos/Compartir.kt` |
-| Animaciones | Transiciones entre pantallas, `animateItem()` en listas |
-| Roles | `Usuario.rol`, `Roles`, menús y acciones condicionadas por `esAdmin` |
-| Pruebas unitarias | `app/src/test/.../ValidacionesTest.kt`, `RolesYSeguridadTest.kt` |
+| Alejandro Lazón | App Android, microservicios, despliegue y documentación |
 
-## Estructura de paquetes (`cl.duoc.panolapp`)
+## Repositorios
+
+- App Android: este repositorio.
+- Backend (microservicios Spring Boot): https://github.com/freshvk/panolapp-backend
+- Diagramas de arquitectura: rama `documents` de este repositorio (carpeta `documents/`).
+
+## Funcionalidades
+
+- **Dos perfiles:** Administrador y Usuario, con menús y permisos distintos.
+  - Administrador: inventario completo, alta/edición/eliminación de equipos, registro de devoluciones, gestión de roles de usuarios y reportes del pañol.
+  - Usuario: catálogo, solicitud de préstamos propios, "Mis préstamos" y "Mi resumen".
+- **Autenticación con SQLite:** registro, inicio y cierre de sesión se resuelven localmente con `SQLiteOpenHelper` y sesión en `SharedPreferences`.
+- **Conexión con microservicios** mediante Retrofit (usuarios, equipos, préstamos y reportes).
+- **Formularios validados** con mensaje de error por campo (login, registro, equipo, préstamo, perfil).
+- **Navegación jerárquica** con Navigation Compose y rutas protegidas por rol.
+- **Animaciones:** transiciones entre pantallas, errores animados, botón con indicador de carga, lista con `animateItem`.
+- **Recursos nativos:** compartir (inventario, comprobante de préstamo y reportes), vibración al registrar operaciones y estado de la batería (panel de administrador).
+- **Manejo de errores de red:** mensajes claros del servidor y botón "Reintentar" cuando no hay conexión.
+
+## Arquitectura (MVVM)
+
 ```
-PanolApp.kt            Application + contenedor de dependencias
-MainActivity.kt        Punto de entrada (tema + navegación)
-data/model             Modelos (Usuario, Equipo, Prestamo)
-data/local             SQLite y sesión
-data/repository       Acceso a datos
-domain                 Validaciones y formatos
-viewmodel              ViewModels y estados de UI
-recursos               Vibración, batería, compartir
-ui/theme               Color, Type, Theme
-ui/components          Componentes reutilizables
-ui/navigation          Rutas y NavHost
-ui/screen              Pantallas
+cl.duoc.panolapp
+├── data
+│   ├── api          Retrofit: ApiConfig, ClienteApi, interfaces por microservicio, Errores
+│   ├── local        PanolDatabase (SQLite: usuarios) y SessionManager
+│   ├── model        Modelos de dominio
+│   └── repository   Usuario, Equipo, Prestamo, Reporte
+├── domain           Validaciones, Formatos y Seguridad (lógica pura)
+├── recursos         Compartir, Vibración, Batería
+├── viewmodel        Auth, Equipo, Prestamo, Reporte (StateFlow)
+└── ui
+    ├── components   Campos, tarjetas, estructura
+    ├── navigation   Rutas y AppNavegacion
+    ├── screen       Login, Registro, Menú, Inventario, Detalle, Formulario, Préstamos, Reportes, Usuarios, Perfil
+    └── theme        Tema Material 3
 ```
 
-## Ejecutar
-Abrir en Android Studio (versión compatible con AGP 9.3.3), sincronizar Gradle y ejecutar en emulador/dispositivo (minSdk 26).
-Datos de ejemplo: al primer inicio se crean 5 equipos y la cuenta de administrador. Registre un usuario normal desde la pantalla de registro.
+Flujo: **UI (Composable) → ViewModel (StateFlow) → Repository → SQLite / Retrofit**. La interfaz no contiene lógica de validación ni acceso a datos. Los diagramas están en la rama `documents`.
 
-## Plan de trabajo (Trello) – listas: Backlog · En progreso · Revisión · Hecho
-Tarjetas del plan de trabajo:
-1. Mockups (Figma/papel) · 2. Tema y componentes · 3. BD + repositorios · 4. Login/Registro + validaciones
-5. Inventario + búsqueda/filtros · 6. Formulario de equipo · 7. Detalle + préstamo · 8. Préstamos + devolución
-9. Perfil/sesión · 10. Navegación y animaciones · 11. Pruebas · 12. Presentación y defensa
+## Microservicios
 
-## GitHub Flow
-`main` siempre estable → una rama por tarjeta (`feature/login`, `feature/inventario`…) → commits pequeños →
-Pull Request → merge a `main`. Todos los commits son del autor del proyecto.
-**No modificar el repositorio después de la entrega.**
+| Servicio | Puerto | Responsabilidad |
+|---|---|---|
+| usuarios-service | 8081 | Sincronización de usuarios y gestión de roles |
+| equipos-service | 8082 | CRUD de equipos y control de stock |
+| prestamos-service | 8083 | Préstamos y devoluciones con control de stock |
+| reportes-service | 8084 | Resumen general, equipos más pedidos y resumen personal |
+
+Spring Boot (Java 21), Firebase Firestore como base de datos, Docker y Docker Compose, desplegados en una instancia EC2 de AWS con IP elástica. El detalle está en el README del repositorio del backend.
+
+## Tecnologías
+
+Kotlin, Jetpack Compose, Material 3, Navigation Compose, SQLite, Retrofit 2 con Gson y OkHttp, Spring Boot, Firebase Firestore, Docker, AWS EC2.
+
+## Cómo ejecutar
+
+1. Clonar el repositorio y abrirlo en Android Studio; esperar la sincronización de Gradle.
+2. Crear `local.properties` con la ruta del SDK si Android Studio no lo hace.
+3. En `data/api/ApiConfig.kt`, `HOST` apunta al backend desplegado en AWS. Para el emulador con un backend local usar `http://10.0.2.2`.
+4. Ejecutar la configuración **app** en un emulador o dispositivo con Android 8.0 o superior.
+
+Cuenta de administrador de prueba: `admin@panol.cl` / `Admin123`. Cualquier otro usuario se registra desde la app con rol Usuario.
+
+## Pruebas
+
+- App: `./gradlew testDebugUnitTest` (validaciones, roles y seguridad, batería y manejo de errores).
+- Backend: pruebas JUnit en cada microservicio (`mvn test`).
+
+## Limitaciones conocidas
+
+- El backend confía en las cabeceras `X-Usuario` y `X-Rol` enviadas por la app (más una clave `X-API-KEY`); no usa JWT.
+- El tráfico va por HTTP sin cifrar (`usesCleartextTraffic`) porque el servidor no tiene dominio ni certificado.
+- Firestore no es una base relacional; la autenticación local sí usa SQLite.
